@@ -10,7 +10,7 @@ const fs = require(`fs`);
 const crypto = require("../services/crypto");
 const funcs = require('../services/functions');
 
-// ΰγξιπιν
+// ΧΧ“ΧΧ™Χ Χ™Χ
 let adminBoard = {
   boardId: 1446023861,
   columnIds: {
@@ -57,10 +57,10 @@ let adminBoard = {
     "ROW_ID": "dummy",
     "TOREN_RELATION": "dummy",
     "TOREN_FORM": "dummy",
-    "ADMIN_NUM": "name",  // ξρ' ΰγξιο
+    "ADMIN_NUM": "name",  // ΧΧ΅' ΧΧ“ΧΧ™Χ
     "TEAM_AREA": "dummy",
     "MANAGED_BY": "dummy",
-    "LOCATION_NAME": "text", // ων ΰϊψ
+    "LOCATION_NAME": "text", // Χ©Χ ΧΧªΧ¨
     "RELATION_TO": "dummy",
     "LTE_ANT_OPT_ECN": "dummy",
     "REGION_MANAGER": "dummy",
@@ -137,7 +137,7 @@ let adminBoard = {
     "NISHLACH_CONS": "dummy",
     "ISHUR_CONS": "dummy",
     "STAT_CONST": "dummy",
-    "STATUS": "status__1",  // ρθθερ ΰϊψ
+    "STATUS": "status__1",  // Χ΅ΧΧΧ•Χ΅ ΧΧªΧ¨
     "BTS_NUMBERS": "dummy",
     "SPECIAL_MEANS": "dummy",
     "LTE_BTS_NUMBERS": "dummy",
@@ -179,7 +179,7 @@ let adminBoard = {
   }
 };
 
-// πιδεμ ϊχμεϊ
+// Χ Χ™Χ”Χ•Χ ΧªΧ§ΧΧ•Χª
 let faultsBoard = {
   boardId: 1455166490,
   autoNumberMask: 'MND0000000000'
@@ -199,7 +199,7 @@ const dmFileTypes = {
   411: "toranPhotos"
 };
 
-const convert2null = 'μΰ ξεβγψ';
+const convert2null = 'ΧΧ ΧΧ•Χ’Χ“Χ¨';
 
 const folders = {
   rakia2monday: {
@@ -350,7 +350,9 @@ async function dm2monday()
             // map files to columns
             let t = { id: '', name: fileAdminNum, fileType: fileType, columns: {} };
             t.columns[adminBoard.dmColumnIds[dmFileTypes[fileType]]] = folders.dm2monday.path + file;
-console.log(t);
+
+            console.log(t);
+
             files2monday_r.push(t);
 
             if (adminNums_r.indexOf(fileAdminNum) == -1) {
@@ -372,26 +374,32 @@ console.log(t);
       // map item ids
       for (let f = 0; f < files2monday_r?.length; f++) {
         let file = files2monday_r[f];
-		let found = false;
+		    let found = false;
+
         for (let i = 0; i < items_r?.length; i++) {
           let item = items_r[i];
 
           if (file.name == item.name) {
-			console.log(item.name);
-			  found=true;
-            let columnId = adminBoard.dmColumnIds[dmFileTypes[file.fileType]];
+			      found = true;
+            console.log(item.name);
 
+            let columnId = adminBoard.dmColumnIds[dmFileTypes[file.fileType]];
             let res = await mondayService.uploadFileToItem(token, item.id, columnId, file.columns[columnId]);
-			if (res?.account_id) {
-				files2monday_r[f].id = item.id;
-			}
-			console.log(files2monday_r[f]);
+
+      			if (res?.account_id) {
+			      	files2monday_r[f].id = item.id;
+			      } else {
+              console.log("Couldn't upload file: " + file.columns[columnId]);
+            }
+
+			      console.log(files2monday_r[f]);
           }
         }
-		if (!found) {
-			console.log('No ADMIN found for file:');
-			console.log(file);
-		}
+
+        if (!found) {
+          console.log('No ADMIN found for file:');
+          console.log(file);
+        }
       }
 
       //console.log(files2monday_r);
