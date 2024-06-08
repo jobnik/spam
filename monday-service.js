@@ -450,6 +450,7 @@ const getColumnMaxMinValue = async (token, boardId, columnId, compare_value = nu
 const uploadFileToItem = async (token, itemId, columnId, filepath) =>
 {
   console.log("uploadFileToItem");
+
   let response = null;
 
   try {
@@ -491,39 +492,39 @@ const uploadFileToItem = async (token, itemId, columnId, filepath) =>
     };
 
     // upload
-	for (let r = 0; r < 3; r++) {	// retries
-		response = null;
-		try {
-			await fetch(url, options).then((res) => {
-			  if (res.status !== 200) {
-				throw(res.statusText);
-			  }
-			  return res.json();
-			}).then(async (json) => {
-				response = json;
-			  console.log(json);
-			  if (json?.error_code) {
-				console.error(json);
-				if (json.error_code == 'ComplexityException') {
-				  // parse seconds from error message
-				  let errorMsg = json.errors[0];
-				  let regex = /in (\d+) seconds/;
-				  let seconds = Number(regex.exec(errorMsg)[1]) + 1;  // adding 1 second to be sure
+    for (let r = 0; r < 3; r++) {	// retries
+      response = null;
+      try {
+        await fetch(url, options).then((res) => {
+          if (res.status !== 200) {
+            throw(res.statusText);
+          }
+          return res.json();
+        }).then(async (json) => {
+          response = json;
+          console.log(json);
+          if (json?.error_code) {
+            console.error(json);
+            if (json.error_code == 'ComplexityException') {
+              // parse seconds from error message
+              let errorMsg = json.errors[0];
+              let regex = /in (\d+) seconds/;
+              let seconds = Number(regex.exec(errorMsg)[1]) + 1;  // adding 1 second to be sure
 
-				  // wait parsed seconds before continuing
-				  console.log(`waiting ${seconds} seconds before continuing...`);
-				  await funcs.sleep(seconds * 1000);
-				}
-			  }
-			});
-			break;
-		} catch (err) {
-			console.error(filename);
-			console.error(err);
-		}
-	}
+              // wait parsed seconds before continuing
+              console.log(`waiting ${seconds} seconds before continuing...`);
+              await funcs.sleep(seconds * 1000);
+            }
+          }
+        });
+        break;
+      } catch (err) {
+        console.error(filename);
+        console.error(err);
+      }
+    }
   } catch (err) {
-	console.error(filename);
+	  console.error(filepath);
     console.error(err);
   }
   
