@@ -205,12 +205,12 @@ const folders = {
   rakia2monday: {
     path: '/monday_app/Rakia2Monday/',
     filename: 'AdminDataTO_CHANGE.json',
-    backupFolder: 'Rakia2MondayPrevious/'
+    backupFolder: 'history/'
   },
   dm2monday: {
     path: '/monday_app/DM2Monday/',
     filename: '',
-    backupFolder: 'backup/'
+    backupFolder: 'history/'
   },
   monday2dm: {
     path: '/monday_app/Monday2DM/',
@@ -333,9 +333,9 @@ async function dm2monday()
     let date = new Date();
     let files2monday_r = [];
     let adminNums_r = [];
-
+let i = 0;
     // get list of files
-    fs.readdirSync(folders.dm2monday.path).forEach(file => {
+    fs.readdirSync(folders.dm2monday.path).every(file => {
       if (file.indexOf('-') != -1) {
         const [fileAdminNum, fileType, fileDateExt] = file.split('-');
 
@@ -344,29 +344,36 @@ async function dm2monday()
 
           const fileStats = fs.statSync(folders.dm2monday.path + file);
 
-          if (dateFormat(fileStats.mtime, 'yyyymmdd') === dateFormat(date, "yyyymmdd")) {
+          //if (dateFormat(fileStats.mtime, 'yyyymmdd') === dateFormat(date, "yyyymmdd")) {
             //console.log(file);
 
             // map files to columns
-            let t = { id: '', name: fileAdminNum, fileType: fileType, columns: {} };
+            let t = { id: '', name: fileAdminNum, fileType: fileType, fileName: file, columns: {} };
             t.columns[adminBoard.dmColumnIds[dmFileTypes[fileType]]] = folders.dm2monday.path + file;
-
-            console.log(t);
-
+console.log(t);
             files2monday_r.push(t);
 
             if (adminNums_r.indexOf(fileAdminNum) == -1) {
               adminNums_r.push(fileAdminNum);
+			  //if (adminNums_r.length > 100) return false;
             }
-          }
+          //}
         }
       }
+	  return true;
     });
 
     //console.log(files2monday_r);
     console.log(adminNums_r.join(","));
 
     if (adminNums_r?.length) {
+
+	// create new history folder
+	let historyFolder = folders.dm2monday.path + folders.dm2monday.backupFolder + dateFormat(date, "yyyy-mm-dd") + '/';
+	if (!fs.existsSync(historyFolder)) {
+		fs.mkdirSync(historyFolder);
+	}
+
       // get all existing items for update
       let items_r = await mondayService.getAllSpecificItems(token, adminBoard.boardId, adminNums_r, ["name"]);
       //console.log(items_r);
@@ -374,32 +381,42 @@ async function dm2monday()
       // map item ids
       for (let f = 0; f < files2monday_r?.length; f++) {
         let file = files2monday_r[f];
-		    let found = false;
-
+		let found = false;
         for (let i = 0; i < items_r?.length; i++) {
           let item = items_r[i];
 
           if (file.name == item.name) {
-			      found = true;
-            console.log(item.name);
-
+			console.log(item.name);
+			  found=true;
             let columnId = adminBoard.dmColumnIds[dmFileTypes[file.fileType]];
+
             let res = await mondayService.uploadFileToItem(token, item.id, columnId, file.columns[columnId]);
-
-      			if (res?.account_id) {
-			      	files2monday_r[f].id = item.id;
-			      } else {
-              console.log("Couldn't upload file: " + file.columns[columnId]);
-            }
-
-			      console.log(files2monday_r[f]);
+			if (res?.account_id) {
+				files2monday_r[f].id = item.id;
+				// move file to history folder
+        fs.rename(file.columns[columnId], historyFolder + file.fileName, function(err) {
+          if (err) {
+            console.log(err);
+          } else {
+            console.log('file "' + file.fileName + '" moved to hitory folder');
+          }
+        });
+			}
+			console.log(files2monday_r[f]);
           }
         }
-
-        if (!found) {
-          console.log('No ADMIN found for file:');
-          console.log(file);
-        }
+		if (!found) {
+		// move file to no-admin-files folder
+        fs.rename(folders.dm2monday.path + file.fileName, folders.dm2monday.path + 'no-admin-files/' + file.fileName, function(err) {
+          if (err) {
+            console.log(err);
+          } else {
+            console.log('file "' + file.fileName + '" moved to no-admin-files folder');
+          }
+        });
+			console.log('No ADMIN found for file:');
+			console.log(file);
+		}
       }
 
       //console.log(files2monday_r);
@@ -541,7 +558,7 @@ async function rakia2monday()
           if (err) {
             console.log(err);
           } else {
-            console.log('file moved to backup folder');
+            console.log('file moved to history folder');
           }
         });
       }
