@@ -193,7 +193,8 @@ let boardIds = {
 const dmFileTypes = {
   304: "asMadeWord",
   311: "asMadeImage",
-  215: "f2p", // f5
+  "215-f2p": "f2p",
+  "215-f5": "f5",
   495: "dohTahzuka",
   496: "ishurTifus",
   411: "toranPhotos"
@@ -337,7 +338,13 @@ let i = 0;
     // get list of files
     fs.readdirSync(folders.dm2monday.path).every(file => {
       if (file.indexOf('-') != -1) {
-        const [fileAdminNum, fileType, fileDateExt] = file.split('-');
+        let [fileAdminNum, fileType, fileType215, fileDateExt] = file.split('-');
+
+		if (!fileDateExt) {
+			fileDateExt = fileType215;
+		} else {
+			fileType = fileType + '-' + fileType215.toLowerCase();
+		}
 
         if (fileDateExt && fileDateExt.indexOf('.') != -1) {
           const [fileDate, fileExt] = fileDateExt.split('.');
